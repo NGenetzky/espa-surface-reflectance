@@ -10,7 +10,6 @@ install:
 	@for i in $(MODLIST); do \
 	(cd $$i; make install; cd ..) \
 	done
-	install -m 755 ../bin/do_ledaps.py $(PREFIX)/bin
 
 clean:
 	@for i in $(MODLIST); do \

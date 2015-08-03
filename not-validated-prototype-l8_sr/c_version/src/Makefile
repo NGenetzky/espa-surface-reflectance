@@ -42,10 +42,9 @@ all: $(EXE)
 l8_sr: $(OBJ) $(INC)
 	$(CC) $(EXTRA) -o $(EXE) $(OBJ) $(LOADLIB)
 
-install:
+install:$(EXE)
 	install -d $(PREFIX)/bin
 	install -m 755 $(EXE) $(PREFIX)/bin
-	install -m 755 ../scripts/*.py $(PREFIX)/bin
 
 clean:
 	$(RM) *.o $(EXE)
