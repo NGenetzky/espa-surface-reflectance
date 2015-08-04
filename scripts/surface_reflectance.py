@@ -94,9 +94,9 @@ def execute_cmd(cmd_string):
 
 def get_executable(isLandsat8):
     if(isLandsat8):
-        return 'do_ledaps.py'
-    else:
         return 'do_l8_sr.py'
+    else:
+        return 'do_ledaps.py'
 
 
 def main():
