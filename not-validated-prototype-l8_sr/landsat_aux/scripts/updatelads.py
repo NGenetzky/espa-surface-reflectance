@@ -59,8 +59,8 @@ class DatasourceResolver:
                 "%s" % e
             logger.error(msg)
             return None
-        print "LADSFTP username: " + self.user
-        print "LADSFTP password: " + self.password
+        logger.info('LADSFTP username: {0}\nLADSFTP password: {1}'
+                    .format(self.user, self.password))
 
         # verify that the XMLRPC service returned valid information and
         # the username and password were set in the configuration
@@ -216,12 +216,13 @@ def downloadLads (year, doy, destination):
             retry_count = 1
             while ((retry_count <= 5) and (retval)):
                 time.sleep(60)
-                print "Retry %d of wget for %s" % (retry_count, url)
+                logger.info('Retry {0} of wget for {1}'.format(retry_count, url)
                 retval = subprocess.call(cmd, shell=True, cwd=destination)
                 retry_count += 1
 
             if retval:
-                print "Unsuccessful download of %s (retried 5 times)" % url
+                logger.warn('Unsuccessful download of {0} (retried 5 times)'
+                            .format(url))
 
     return SUCCESS
 
