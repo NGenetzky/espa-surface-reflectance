@@ -1,0 +1,18 @@
+# Compiled source #
+###################
+*.o
+ 
+# Specific exes #
+#################
+ledaps/ledapsSrc/src/6sV-1.0B/sixsV1.0B
+ledaps/ledapsSrc/src/lndcal/lndcal
+ledaps/ledapsSrc/src/lndpm/lndpm
+ledaps/ledapsSrc/src/lndsr/lndsr
+ledaps/ledapsSrc/src/lndsrbm/SDSreader3.0
+ledaps/ledapsSrc/src/lndsrbm/comptemp
+ledaps/ledapsSrc/src/lndsrbm/dump_meta
+ledaps/ledapsSrc/src/lndsrbm/geo2xy
+ledaps/ledapsSrc/src/lndsrbm/lndsrbm
+ledaps/ledapsSrc/src/lndsrbm/xy2geo
+not-validated-prototype-l8_sr/c_version/src/l8_sr
+

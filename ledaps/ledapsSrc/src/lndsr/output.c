@@ -217,7 +217,7 @@ revision on 1/15/2015 by Gail Schmidt, USGS/EROS
     {
       bmeta[ib].data_type = ESPA_INT16;
       bmeta[ib].fill_value = lut->output_fill;
-      bmeta[ib].saturate_value = lut->out_satu;
+      bmeta[ib].saturate_value = lut->output_satu;
       strcpy (bmeta[ib].category, "image");
       sprintf (bmeta[ib].name, "sr_band%d", input->meta.iband[ib]);
       bmeta[ib].scale_factor = lut->scale_factor;

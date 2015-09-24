@@ -7,6 +7,7 @@
 #include "error.h"
 
 #define OUTPUT_FILL (-9999)
+#define INPUT_SATU (20000)
 #define OUTPUT_SATU (20000)
 #define MIN_VALID_SR (-2000)
 #define MAX_VALID_SR (16000)
@@ -35,7 +36,8 @@ Lut_t *GetLut(int nband, Input_meta_t *meta, Img_coord_int_t *input_size) {
   this->nband = nband;
   this->in_fill = meta->fill;
   this->output_fill = OUTPUT_FILL;
-  this->out_satu = OUTPUT_SATU;
+  this->in_satu = INPUT_SATU;
+  this->output_satu = OUTPUT_SATU;
   this->aerosol_fill = AEROSOL_FILL;
   this->ar_region_size.l = AEROSOL_REGION_NLINE;
   this->ar_region_size.s = AEROSOL_REGION_NSAMP;

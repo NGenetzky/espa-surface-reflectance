@@ -7,6 +7,8 @@
 # Updated on 10/28/2014 by Gail Schmidt, USGS EROS
 #   Changed the ANC_PATH environment variable to LEDAPS_AUX_DIR to be more
 #   consistent with the Landsat8 auxiliary directory name.
+# Updated on 9/9/2015 by Gail Schmidt, USGS EROS
+#   Modified the wget calls to retry up to 5 times if the download fails.
 ############################################################################
 import sys
 import os
@@ -289,7 +291,8 @@ def getOzoneSource (filename):
     elif inst == "omi":
         ozoneSource = 'OMI'
     else:
-        print "Error classifying the downloaded data for: %s ... unknown source type (%s)" % (filename, inst)
+        print ("Error classifying the downloaded data for: %s ... unknown "
+            "source type (%s)" % (filename, inst))
         return None
 
     # successful processing
@@ -376,18 +379,32 @@ def downloadToms (year, destination):
     # obtain the list of URL(s) for our particular date
     dsList = DatasourceResolver().resolve(year)
     if dsList == None:
-        print "WARNING: EP/TOMS URL could not be resolved for year %d.  processing will continue ..." % year
+        print ("WARNING: EP/TOMS URL could not be resolved for year %d.  "
+            "Processing will continue ..." % year)
         return ERROR
 
     # download the data for the current year from the list of URLs.
     # if there is a problem with the connection, then retry up to 5 times.
     # Note: if you don't like the wget output, --quiet can be used to minimize
-    # the output info.
+    # the output info.  wget will return a nonzero value if there was a problem.
     print "Downloading data for year %d to: %s" % (year, destination)
     for ds in dsList:
         print "Retrieving %s to %s" % (ds.url, destination)
         cmd = 'wget --tries=5 %s' % ds.url
-        subprocess.call(cmd, shell=True, cwd=destination)
+        retval = subprocess.call(cmd, shell=True, cwd=destination)
+
+        # make sure the wget was successful or retry up to 5 more times and
+        # sleep in between
+        if retval:
+            retry_count = 1
+            while ((retry_count <= 5) and (retval)):
+                time.sleep(60)
+                print "Retry %d of wget for %s" % (retry_count, ds.url)
+                retval = subprocess.call(cmd, shell=True, cwd=destination)
+                retry_count += 1
+    
+            if retval:
+                print "unsuccessful download of %s (retried 5 times)" % ds.url
 
     return SUCCESS
 
@@ -449,7 +466,8 @@ def getTomsData (ancdir, year):
         # make sure files were found or print a warning
         nfiles = len(fileList)
         if nfiles == 0:
-            print "WARNING: no EP/TOMS data available for doy %d year %d (%s). processing will continue ..." % (doy, year, datestr)
+            print ("WARNING: no EP/TOMS data available for doy %d year %d "
+                "(%s). processing will continue ..." % (doy, year, datestr))
             continue
         else:
             # if only one file was found which matched our date, then that's
@@ -460,13 +478,15 @@ def getTomsData (ancdir, year):
             else:
                 tomsfile = resolveFile (fileList)
                 if tomsfile == None:
-                    print "WARNING: error resolving the list of EP/TOMS files to process. processing will continue ..."
+                    print ("WARNING: error resolving the list of EP/TOMS files "
+                        "to process. processing will continue ...")
                     continue
 
             # get the ozone source
             ozoneSource = getOzoneSource (tomsfile)
             if ozoneSource == None:
-                print "WARNING: error determining the ozone source for %s. processing will continue ..." % tomsfile
+                print ("WARNING: error determining the ozone source for %s. "
+                    "Processing will continue ..." % tomsfile)
                 continue
 
             # generate the full path for the input and output file to be
@@ -475,13 +495,15 @@ def getTomsData (ancdir, year):
             fullInputPath = os.path.join(dloaddir, tomsfile)
             if os.path.isfile(fullOutputPath):
                 os.remove(fullOutputPath)
-            cmdstr = 'convert_ozone %s %s %s' % (fullInputPath, fullOutputPath, ozoneSource)
+            cmdstr = 'convert_ozone %s %s %s' % (fullInputPath, fullOutputPath,
+                ozoneSource)
             print "Executing %s\n" % cmdstr
             (status, output) = commands.getstatusoutput (cmdstr)
             print output
             exit_code = status >> 8
             if exit_code != 0:
-                print "WARNING: error running convert_ozone for year %d, DOY %d.  processing will continue ..." % (year, doy)
+                print ("WARNING: error running convert_ozone for year %d, "
+                    "DOY %d.  processing will continue ..." % (year, doy))
     # end for doy
 
     # remove the files downloaded to the temporary directory
@@ -542,8 +564,8 @@ def main ():
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
-        print "Invalid command line argument combination.  Type --help \
-for more information"
+        print ("Invalid command line argument combination.  Type --help "
+            "for more information")
         return ERROR
 
     # determine the ancillary directory to store the data
@@ -577,7 +599,8 @@ for more information"
         print 'Processing year: %d' % yr
         status = getTomsData(ancdir, yr)
         if status == ERROR:
-            print "WARNING: Problems occurred while processing EP/TOMS data for year %d.  Processing will continue." % yr
+            print ("WARNING: Problems occurred while processing EP/TOMS data "
+                "for year %d.  Processing will continue." % yr)
 
     print 'EP/TOMS processing complete.'
     return SUCCESS

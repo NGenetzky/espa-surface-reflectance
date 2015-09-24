@@ -42,6 +42,7 @@ install:
 	install -d $(PREFIX)/bin
 	install -m 755 $(TARGET1) $(PREFIX)/bin
 	install -m 755 $(TARGET2) $(PREFIX)/bin
+	install -m 755 update*.py $(PREFIX)/bin
 
 #
 # Rules

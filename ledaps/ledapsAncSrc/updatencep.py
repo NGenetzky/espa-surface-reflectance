@@ -7,6 +7,8 @@
 # Updated on 10/28/2014 by Gail Schmidt, USGS EROS
 #   Changed the ANC_PATH environment variable to LEDAPS_AUX_DIR to be more
 #   consistent with the Landsat8 auxiliary directory name.
+# Updated on 9/9/2015 by Gail Schmidt, USGS EROS
+#   Modified the wget calls to retry up to 5 times if the download fails.
 ############################################################################
 import sys
 import os.path
@@ -189,10 +191,13 @@ def executeNcep (fullinputpath, outputdir, year, clean):
         print output
         exit_code = status >> 8
         if exit_code == 157:  # return value of -99 (2s complement of 157)
-            print "ERROR: Input file for year %d, DOY %d is not readable.  Stop processing since this same file is used for all days in the current year." % (year, doy)
+            print ("ERROR: Input file for year %d, DOY %d is not readable.  "
+                "Stop processing since this same file is used for all days in "
+                "the current year." % (year, doy))
             return ERROR
         elif exit_code != 0:
-            print "WARNING: error running ncep for year %d, DOY %d.  processing will continue ..." % (year, doy)
+            print ("WARNING: error running ncep for year %d, DOY %d.  "
+                "Processing will continue ..." % (year, doy))
             if os.path.isfile(fulloutputpath):
                 os.remove(fulloutputpath)
 
@@ -252,27 +257,40 @@ def cleanNcepTargetDir (ancdir, year):
 #   function is pretty short and sweet, so we'll stick with wget.
 ############################################################################
 def downloadNcep (sourcefilename, destination):
-
     print "Retrieving %s to %s" % (sourcefilename, destination)
-    url = 'ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis/surface/%s' % sourcefilename
+    url = 'ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis/surface/%s' %  \
+        sourcefilename
 
     # make sure the path exists or create it recursively
     if not os.path.exists(destination):
         print "%s does not exist... creating" % destination
         os.makedirs(destination, 0777)
 
+    # make sure the file to be downloaded doesn't exist, remove it if it does
+    localfile = '%s/%s' % (destination, sourcefilename)
+    if os.path.isfile(localfile):
+        os.remove(localfile)
+
     # get the file from the ftp site and download it to the destination.
-    # if there is a problem with the connection, then retry up to 5 times.
+    # if there is a problem with the connection, then retry up to 5 times
+    # and wait 60 seconds between retries.  Retry connection refused errors.
     # Note: if you don't like the wget output, --quiet can be used to
     # minimize the output info.
     cmd = 'wget --tries=5 %s' % url
-    subprocess.call(cmd, shell=True, cwd=destination)
+    retval = subprocess.call(cmd, shell=True, cwd=destination)
 
-    # make sure the file exists and download was successful
-    localfile = '%s/%s' % (destination, sourcefilename)
-    if not os.path.isfile(localfile):
-        print "unsuccessful download of %s" % url
-        return ERROR
+    # make sure the wget was successful or retry up to 5 more times and sleep
+    # in between
+    if retval:
+        retry_count = 1
+        while ((retry_count <= 5) and (retval)):
+            time.sleep(60)
+            print "Retry %d of wget for %s" % (retry_count, url)
+            retval = subprocess.call(cmd, shell=True, cwd=destination)
+            retry_count += 1
+
+        if retval:
+            print "unsuccessful download of %s (retried 5 times)" % url
 
     print "successful download of %s to %s" % (url, destination)
     return SUCCESS
@@ -324,8 +342,8 @@ def main ():
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
-        print "Invalid command line argument combination.  Type --help \
-for more information"
+        print ("Invalid command line argument combination.  Type --help \ "
+            "for more information")
         return ERROR
 
     # determine the ancillary directory to store the data
@@ -359,7 +377,8 @@ for more information"
         print 'Processing year: %d' % yr
         status = getNcepData(ancdir, yr)
         if status == ERROR:
-            print "WARNING: Problems occurred while processing NCEP data for year %d.  Processing will continue." % yr
+            print ("WARNING: Problems occurred while processing NCEP data for "
+                "year %d.  Processing will continue." % yr)
 
     print 'NCEP processing complete.'
     return SUCCESS

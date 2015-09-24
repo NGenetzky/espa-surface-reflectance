@@ -519,6 +519,7 @@ int main (int argc, const char **argv) {
 
   for (ib = 0; ib < output->nband_out; ib++) {
     sr_stats.nfill[ib] = 0;
+    sr_stats.nsatu[ib] = 0;
     sr_stats.nout_range[ib] = 0;
     sr_stats.first[ib] = true;
   }
@@ -1276,9 +1277,9 @@ printf ("Acquisition Time: %02d:%02d:%fZ\n", input->meta.acq_date.hour, input->m
 
   for (ib = 0; ib < lut->nband; ib++) {
     if (output->metadata.band[ib].name != NULL)
-    printf(" sr %s  nfill %ld  nout_range %ld  min  %d  max  %d\n", 
+    printf(" sr %s  nfill %ld  nsatu %ld  nout_range %ld  min  %d  max  %d\n", 
             output->metadata.band[ib].name, 
-	    sr_stats.nfill[ib], sr_stats.nout_range[ib],
+	    sr_stats.nfill[ib], sr_stats.nsatu[ib], sr_stats.nout_range[ib],
 	    sr_stats.sr_min[ib], sr_stats.sr_max[ib]);
   }
   

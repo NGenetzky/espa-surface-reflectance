@@ -8,6 +8,8 @@
  * revision 1.2.1 3/22/2013  Gail Schmidt, USGS
  * - writing UL and LR corners to the output metadata to be able to detect
  *   ascending scenes or scenes where the image is flipped North to South
+ * revision 8/11/2015  Gail Schmidt, USGS
+ * - input saturated pixels are flagged as such and output as saturated
  */
 
 extern atmos_t atmos_coef;
@@ -17,7 +19,8 @@ bool Sr(Lut_t *lut, int nsamp, int il, int16 **line_in, int16 **line_out,
         Sr_stats_t *sr_stats) 
 {
   int is;
-  bool is_fill;
+  bool is_fill;      /* is the pixel fill */
+  bool is_satu;      /* is the pixel saturated */
   int ib;
   Img_coord_int_t loc;
   float rho,tmpflt;
@@ -29,6 +32,7 @@ bool Sr(Lut_t *lut, int nsamp, int il, int16 **line_in, int16 **line_out,
   for (is = 0; is < nsamp; is++) {
     loc.s = is;
     is_fill = false;
+    is_satu = false;
 
 /*
 NAZMI 6/2/04 : correct even cloudy pixels
@@ -38,59 +42,53 @@ NAZMI 6/2/04 : correct even cloudy pixels
 
     for (ib = 0; ib < lut->nband; ib++) {
       if (line_in[ib][is] == lut->in_fill) {
+        /* fill pixel */
         is_fill = true;
         line_out[ib][is] = lut->output_fill;
         sr_stats->nfill[ib]++;
-      } else {
-/* BEGIN introduce correction to handle saturated data Fri-Sep-11-17:49:35-EDT-2009 EV */
+      }
+      else if (line_in[ib][is] == lut->in_satu) {
+        /* saturated pixel */
+        is_satu = true;
+        line_out[ib][is] = lut->output_satu;
+        sr_stats->nsatu[ib]++;
+      }
+      else {
+        rho=(float)line_in[ib][is]/10000.;
+        rho=(rho/interpol_atmos_coef.tgOG[ib][0]-interpol_atmos_coef.rho_ra[ib][0]);
+        tmpflt=(interpol_atmos_coef.tgH2O[ib][0]*interpol_atmos_coef.td_ra[ib][0]*interpol_atmos_coef.tu_ra[ib][0]);
+        rho /= tmpflt;
+        rho /= (1.+interpol_atmos_coef.S_ra[ib][0]*rho);
 
-      if (line_in[ib][is] != lut->max_valid_sr) {
-      rho=(float)line_in[ib][is]/10000.;
-      rho=(rho/interpol_atmos_coef.tgOG[ib][0]-interpol_atmos_coef.rho_ra[ib][0]);
-		tmpflt=(interpol_atmos_coef.tgH2O[ib][0]*interpol_atmos_coef.td_ra[ib][0]*interpol_atmos_coef.tu_ra[ib][0]);
-		rho /= tmpflt;
-		rho /= (1.+interpol_atmos_coef.S_ra[ib][0]*rho);
+        line_out[ib][is] = (short)(rho*10000.);  /* scale for output */
 
-
-        line_out[ib][is] = (short)(rho*10000.);
-
-        } else
-	{
-       line_out[ib][is] = lut->max_valid_sr;
-	}
-	
-/* END introduce correction to handle saturated data Fri-Sep-11-17:49:35-EDT-2009 EV */
-
-	if (line_out[ib][is] < lut->min_valid_sr) {
-	  sr_stats->nout_range[ib]++;
-	  line_out[ib][is] = lut->min_valid_sr;
-	}
-	if (line_out[ib][is] > lut->max_valid_sr) {
-	  sr_stats->nout_range[ib]++;
-	  line_out[ib][is] = lut->max_valid_sr;
-	}
+        if (line_out[ib][is] < lut->min_valid_sr) {
+          sr_stats->nout_range[ib]++;
+          line_out[ib][is] = lut->min_valid_sr;
+        }
+        if (line_out[ib][is] > lut->max_valid_sr) {
+          sr_stats->nout_range[ib]++;
+          line_out[ib][is] = lut->max_valid_sr;
+        }
       }
 
-      if (is_fill) continue;
+      if (is_fill || is_satu) continue;
 
       if (sr_stats->first[ib]) {
-
         sr_stats->sr_min[ib] = sr_stats->sr_max[ib] = line_out[ib][is];
         sr_stats->first[ib] = false;
-
       } else {
-
         if (line_out[ib][is] < sr_stats->sr_min[ib])
           sr_stats->sr_min[ib] = line_out[ib][is];
 
         if (line_out[ib][is] > sr_stats->sr_max[ib])
           sr_stats->sr_max[ib] = line_out[ib][is];
       } 
-    }
+    }  /* end for */
 
   }
-	free_mem_atmos_coeff(&interpol_atmos_coef);
 
+  free_mem_atmos_coeff(&interpol_atmos_coef);
   return true;
 }
 

@@ -59,7 +59,8 @@ typedef struct {
   int in_fill;             /* Input fill value */
   int output_fill;         /* Output fill value */
   int aerosol_fill;        /* Aerosol fill value */
-  int out_satu;            /* Output saturation value (Feng, 3/23/09) */
+  int in_satu;             /* Input saturated value */
+  int output_satu;         /* Output saturation value (Feng, 3/23/09) */
   Img_coord_int_t ar_region_size;  
                            /* Size of the aerosol retreval region */
   Img_coord_int_t ar_size;  

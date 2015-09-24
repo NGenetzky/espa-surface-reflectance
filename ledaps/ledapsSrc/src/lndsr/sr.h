@@ -11,6 +11,7 @@ typedef struct {
   int sr_min[NBAND_SR_MAX];
   int sr_max[NBAND_SR_MAX];
   long nfill[NBAND_SR_MAX];
+  long nsatu[NBAND_SR_MAX];
   long nout_range[NBAND_SR_MAX];
 } Sr_stats_t;
 

@@ -271,6 +271,10 @@ Date          Programmer       Reason
                                in many cases.
 5/18/2015     Gail Schmidt     Updated the rounding to handle postitive and
                                negative values
+8/10/2015     Gail Schmidt     Fixed a bug accessing the 9x9 window in the
+                               land/water mask array
+                               Fixed a bug accessing the CMG arrays for line+1
+                               and sample+1
 
 NOTES:
 1. Initializes the variables and data arrays from the lookup table and
@@ -664,18 +668,25 @@ int compute_sr_refl
 
             /* Use that lat/long to determine the line/sample in the
                CMG-related lookup tables, using the center of the UL
-               pixel */
+               pixel. Note, we are basically making sure the line/sample
+               combination falls within -90, 90 and -180, 180 global climate
+               data boundaries.  However, the source code below uses lcmg+1
+               and scmg+1.  Thus we need to stop one line/samp short in the CMG
+               data so we don't access an invalid portion of the CMG data
+               arrays. */
             ycmg = (89.975 - lat) * 20.0;   /* vs / 0.05 */
             xcmg = (179.975 + lon) * 20.0;  /* vs / 0.05 */
             lcmg = (int) (ycmg);
             scmg = (int) (xcmg);
-            if ((lcmg < 0 || lcmg >= CMG_NBLAT) ||
-                (scmg < 0 || scmg >= CMG_NBLON))
+            if ((lcmg < 0 || lcmg >= CMG_NBLAT-1) ||
+                (scmg < 0 || scmg >= CMG_NBLON-1))
             {
                 sprintf (errmsg, "Invalid line/sample combination for the "
                     "CMG-related lookup tables - line %d, sample %d "
                     "(0-based). CMG-based tables are %d lines x %d "
-                    "samples.", lcmg, scmg, CMG_NBLAT, CMG_NBLON);
+                    "samples. We need to stop one line and sample short of "
+                    "the CMG data to make sure we access value memory within "
+                    "the CMG data arrays.", lcmg, scmg, CMG_NBLAT, CMG_NBLON);
                 error_handler (true, FUNC_NAME, errmsg);
                 exit (ERROR);
             }
@@ -717,12 +728,15 @@ int compute_sr_refl
                will be applied later to make sure. */
             for (win = 0; win < 9; win++)
             {  /* Check 9x9 window */
-                if ((i == win || i == nlines-win-1 ||
-                     j == win || j == nsamps-win-1) && lw_mask[curr_pix] == 0)
+                if (i < win || i >= nlines-win-1 ||
+                    j < win || j >= nsamps-win-1)
                 {
-                    cloud[curr_pix] = 128;    /* set water bit */
-                    tresi[curr_pix] = -1.0;
-                    break;
+                    if (lw_mask[curr_pix] == 0)
+                    {
+                        cloud[curr_pix] = 128;    /* set water bit */
+                        tresi[curr_pix] = -1.0;
+                        break;
+                    }
                 }
                 else if
                     (lw_mask[(i-win)*nsamps + j-win] == 0 ||

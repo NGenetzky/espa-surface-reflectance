@@ -382,7 +382,7 @@ int create_6S_tables_water(sixs_tables_t *sixs_tables) {
 	sixs_tables->aot[12]=1.60;
 	sixs_tables->aot[13]=1.80;
 	sixs_tables->aot[14]=2.00;
-	printf ("DEBUG: GAIL in compute_6S_tables_water -- shouldn't be here!\n");
+	printf ("DEBUG: in compute_6S_tables_water -- shouldn't be here!\n");
 	
 	if ((tmpstr = tmpnam(sixs_cmd_filename)) == NULL) {
       fprintf(stderr,"ERROR: creating temporary file %s\n",sixs_cmd_filename);
@@ -667,7 +667,7 @@ int compute_atmos_params_6S(sixs_atmos_params_t *sixs_atmos_params) {
 	int tm_band[SIXS_NB_BANDS]={25,26,27,28,29,30};
     char *tmpstr;
 	FILE *fd;
-	printf ("DEBUG: GAIL in compute_atmos_params_6S -- shouldn't be here!\n");
+	printf ("DEBUG: in compute_atmos_params_6S -- shouldn't be here!\n");
 	
 	if ((tmpstr = tmpnam(sixs_cmd_filename)) == NULL) {
       fprintf(stderr,"ERROR: creating temporary file %s\n",sixs_cmd_filename);

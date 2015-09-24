@@ -2,6 +2,8 @@
 
 ############################################################################
 # Original development on 9/2/2014 by Gail Schmidt, USGS EROS
+# Updated on 9/9/2015 by Gail Schmidt, USGS EROS
+#   Modified the wget calls to retry up to 5 times if the download fails.
 ############################################################################
 import sys
 import os
@@ -37,12 +39,15 @@ class DatasourceResolver:
     AQUA_CMG = '/allData/22/MYD09CMG/'
 
     def __init__(self):
+        # get the logger
+        logger = logging.getLogger(__name__)
+
         # determine the auxiliary directory to store the data
         xmlrpc = os.environ.get('ESPA_XMLRPC')
         if xmlrpc is None:
             msg = "ESPA_XMLRPC environment variable not set... exiting"
             logger.error(msg)
-            return ERROR
+            return None
 
         # get the LADS username and password
         try:
@@ -53,7 +58,7 @@ class DatasourceResolver:
             msg = "Error connecting to XMLRPC service to fetch credentials: " \
                 "%s" % e
             logger.error(msg)
-            return ERROR
+            return None
         print "LADSFTP username: " + self.user
         print "LADSFTP password: " + self.password
 
@@ -64,7 +69,7 @@ class DatasourceResolver:
                 "XMLRPC service. Make sure ladsftp.username and " \
                 "ladsftp.password are set in the ESPA_XMLRPC."
             logger.error(msg)
-            return ERROR
+            return None
 
 
     #######################################################################
@@ -203,7 +208,20 @@ def downloadLads (year, doy, destination):
         msg = "Retrieving %s to %s" % (url, destination)
         logger.info(msg)
         cmd = 'wget --tries=5 %s' % url
-        subprocess.call(cmd, shell=True, cwd=destination)
+        retval = subprocess.call(cmd, shell=True, cwd=destination)
+
+        # make sure the wget was successful or retry up to 5 more times and
+        # sleep in between
+        if retval:
+            retry_count = 1
+            while ((retry_count <= 5) and (retval)):
+                time.sleep(60)
+                print "Retry %d of wget for %s" % (retry_count, url)
+                retval = subprocess.call(cmd, shell=True, cwd=destination)
+                retry_count += 1
+
+            if retval:
+                print "Unsuccessful download of %s (retried 5 times)" % url
 
     return SUCCESS
 

@@ -26,6 +26,10 @@ int read_ozone(char* fname, short int** data, int* doy, int* year, int* nlats,
  *   file, but the actual latitude values are not being written to
  *   correctly reflect this.  A fix has been made.
  *
+ *   Modified on 9/10/2015 by Gail Schmidt, USGS LSRD Project
+ *   The longitude values have been changed to be every degree versus
+ *   every 1.25 degrees for the OMI products.  Need to support both lat/long
+ *   values and step values.
  ********************************************************************/
 
 int main(int argc,char **argv) {
@@ -75,13 +79,26 @@ int main(int argc,char **argv) {
   read_ozone(argv[1], &data, &idoy, &year, &nlats,&nlons, &minlat, &minlon, &maxlat,
                       &maxlon, &latsteps, &lonsteps, lat_array, lon_array);
 
-  if ( nlats!=180 || fabs(minlat+ 89.500)>0.0001 || fabs(maxlat- 89.500)>0.0001 || 
-       nlons!=288 || fabs(minlon+179.375)>0.0001 || fabs(maxlon-179.375)>0.0001 ||
-       fabs(latsteps-1.0)>0.0001 || fabs(lonsteps-1.25)>0.0001 )printf(
-   "*** unexpected values ***\n nlats=%d nlons=%d minlat=%f maxlat=%f minlon=%f maxlon=%f\n"
-   ,nlats,nlons,minlat,maxlat,minlon,maxlon);
+ /*  Verify the ozone values are as expected.  There are different min/max
+  *  values and step values based on the instrument.
+ Day: 260 Sep 17, 2001    EP/TOMS    NRT OZONE    GEN:01.271 Asc LECT: 11:09 AM 
+012345678 1 2345678 2 2345678 3 2345678 4 2345678 5 2345678 6 2345678 7 2345678
+ Longitudes:  288 bins centered on 179.375 W to 179.375 E  (1.25 degree steps)  
+ Latitudes :  180 bins centered on  89.5   S to  89.5   N  (1.00 degree steps)  
 
-
+ Day:  38 Feb  7, 2015    OMI TO3    STD OZONE    GEN:15:040 Asc LECT: 01:40 pm 
+ Longitudes:  360 bins centered on 179.5  W  to 179.5  E   (1.00 degree steps)  
+ Latitudes :  180 bins centered on  89.5  S  to  89.5  N   (1.00 degree steps)  
+ */
+  if ((nlats!=180 || fabs(minlat+ 89.500)>0.0001 || fabs(maxlat- 89.500)>0.0001
+   || nlons!=360 || fabs(minlon+179.5)>0.0001 || fabs(maxlon-179.5)>0.0001
+   || fabs(latsteps-1.0)>0.0001 || fabs(lonsteps-1.0)>0.0001) &&
+     (nlats!=180 || fabs(minlat+ 89.500)>0.0001 || fabs(maxlat- 89.500)>0.0001
+   || nlons!=288 || fabs(minlon+179.375)>0.0001 || fabs(maxlon-179.375)>0.0001
+   || fabs(latsteps-1.0)>0.0001 || fabs(lonsteps-1.25)>0.0001))
+   printf(
+   "*** unexpected values ***\n nlats=%d nlons=%d minlat=%f maxlat=%f minlon=%f maxlon=%f latsteps=%f lonsteps=%f\n"
+   ,nlats,nlons,minlat,maxlat,minlon,maxlon,latsteps,lonsteps);
 
 /****
 	check and open output
@@ -229,12 +246,6 @@ int read_ozone(char* fname, short int** out_data, int* doy, int* year, int* nlat
  float mylat;
  float comp_lat,comp_lon;
  char hemisphere1, hemisphere2;
- /*
- Day: 260 Sep 17, 2001    EP/TOMS    NRT OZONE    GEN:01.271 Asc LECT: 11:09 AM 
-012345678 1 2345678 2 2345678 3 2345678 4 2345678 5 2345678 6 2345678 7 2345678
- Longitudes:  288 bins centered on 179.375 W to 179.375 E  (1.25 degree steps)  
- Latitudes :  180 bins centered on  89.5   S to  89.5   N  (1.00 degree steps)  
- */
 
  fp = fopen(fname, "r");
  GetLine(fp,line);

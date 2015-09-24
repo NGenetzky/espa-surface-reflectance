@@ -1,5 +1,5 @@
-## Ledaps Version 2.3.0 Release Notes
-Release Date: May 27, 2015
+## Ledaps Version 2.3.1 Release Notes
+Release Date: September 23, 2015
 
 ### Downloads
 Ledaps source code
@@ -10,7 +10,7 @@ Ledaps auxiliary files
 
     http://espa.cr.usgs.gov/downloads/auxiliaries/ledaps_auxiliary/ledaps_aux.1978-2014.tar.gz
 
-See git tag [ledaps-version_2.3.0]
+See git tag [ledaps-version_2.3.1]
 
 ### Installation
   * Install dependent libraries - ESPA product formatter (https://github.com/USGS-EROS/espa-product-formatter)
@@ -80,9 +80,8 @@ After compiling the product-formatter raw\_binary libraries and tools, the conve
 ### Product Guide
 
 ## Changes From Previous Version
-#### Updates on May 27, 2015 - USGS EROS
-  * lndcal
-    1. Modified the lndcal application to fix a round/up round down error.  This will cause some scenes to have a difference by one when comparing to previously processed scenes.
-    1. Modified lndcal to utilize the TOA reflectance coefficients and the thermal constants from the XML file if they exist (for post March 17th scenes).  This causes differences by 1 in most of the bands, except band 6.  Bands 1,2,3 sometimes have a little higher difference (i.e. up to a difference of 4 from my testing) when comparing to previously processed scenes.
-  * All
-    1. Updated all applications to install in $PREFIX/bin vs. $BIN for both LEDAPS and LEDAPS auxiliary.
+#### Updates on September 23, 2015 - USGS EROS
+  * lndsr
+    1. lndcal flags saturated pixels however lndsr processes those pixels the same all other valid pixels.  Modifying lndsr to detect saturated pixels, flag them in the output product as such, and keep track of the number of saturated pixels in the lndsr stats output to the screen.
+  * ledapsAncSrc
+    1. Modified the update auxiliary files scripts (updatencep.py and updatetoms.py) to retry the file download in the event the wget fails.  Also updated convert_ozone.c to handle both OMI and pre-OMI lat/long min/max and step values instead of flagging OMI values as “unexpected”.  Added the scripts to the install section of the Makefile.
