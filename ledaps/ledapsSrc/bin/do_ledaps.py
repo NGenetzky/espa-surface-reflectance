@@ -234,8 +234,8 @@ class Ledaps():
         log_handler = None
         if logfile is not None:
             log_handler = open(logfile, 'w', buffering=1)
-        msg = 'LEDAPS processing of Landsat XML file: %s' % xmlfile
-        logIt(msg, log_handler)
+        logger.info('LEDAPS processing of Landsat XML file: {0}'
+                    .format(xmlfile))
 
         # should we expect the lnd* applications to be in the PATH or in the
         # BIN directory?
@@ -243,27 +243,23 @@ class Ledaps():
             # get the BIN dir environment variable
             bin_dir = os.environ.get('BIN')
             bin_dir = bin_dir + '/'
-            msg = 'BIN environment variable: %s' % bin_dir
-            logIt(msg, log_handler)
+            logger.info('BIN environment variable: {0}'.format(bin_dir)
         else:
             # don't use a path to the lnd* applications
             bin_dir = ""
-            msg = 'LEDAPS executables expected to be in the PATH'
-            logIt(msg, log_handler)
+            logger.info('LEDAPS executables expected to be in the PATH')
 
         # make sure the XML file exists
         if not os.path.isfile(xmlfile):
-            msg = ("Error: XML file does not exist or is not accessible: %s"
-                   % xmlfile)
-            logIt(msg, log_handler)
+            logger.error('Error: XML file does not exist or is not accessible'
+                         ': {0}'.format(xmlfile))
             return ERROR
 
         # parse the XML filename, strip off the .xml
         # use the base XML filename and not the full path.
         base_xmlfile = os.path.basename(xmlfile)
         xml = re.sub('\.xml$', '', base_xmlfile)
-        msg = 'Processing XML basefile: %s' % xml
-        logIt(msg, log_handler)
+        logger.info('Processing XML basefile: {0}'.format(xml))
 
         # get the path of the XML file and change directory to that location
         # for running this script.  save the current working directory for
@@ -274,44 +270,41 @@ class Ledaps():
         mydir = os.getcwd()
         xmldir = os.path.dirname(os.path.abspath(xmlfile))
         if not os.access(xmldir, os.W_OK):
-            msg = ('Path of XML file is not writable: %s.'
-                   '  LEDAPS needs write access to the XML directory.'
-                   % xmldir)
-            logIt(msg, log_handler)
+            logger.error('Path of XML file is not writable: {0}.'
+                         '  LEDAPS needs write access to the XML directory.'
+                         .format(xmldir))
             return ERROR
-        msg = 'Changing directories for LEDAPS processing: %s' % xmldir
-        logIt(msg, log_handler)
+        logger.info('Changing directories for LEDAPS processing: {0}'
+                    .format(xmldir))
         os.chdir(xmldir)
 
         # run LEDAPS modules, checking the return status of each module.
         # exit if any errors occur.
         cmdstr = "%slndpm %s" % (bin_dir, base_xmlfile)
-#        print 'DEBUG: lndpm command: %s' % cmdstr
+        logger.debug('DEBUG: lndpm command: {0}'.format(cmdstr))
         (status, output) = commands.getstatusoutput(cmdstr)
-        logIt(output, log_handler)
+        logger.info(output)
         exit_code = status >> 8
         if exit_code != 0:
-            msg = 'Error running lndpm.  Processing will terminate.'
-            logIt(msg, log_handler)
+            logger.error('Error running lndpm.  Processing will terminate.')
             os.chdir(mydir)
             return ERROR
 
         cmdstr = "%slndcal lndcal.%s.txt" % (bin_dir, xml)
-#        print 'DEBUG: lndcal command: %s' % cmdstr
+        logger.debug('DEBUG: lndcal command: {0}'.format(cmdstr))
         (status, output) = commands.getstatusoutput(cmdstr)
-        logIt(output, log_handler)
+        logger.info(output)
         exit_code = status >> 8
         if exit_code != 0:
-            msg = 'Error running lndcal.  Processing will terminate.'
-            logIt(msg, log_handler)
+            logger.error('Error running lndcal.  Processing will terminate.')
             os.chdir(mydir)
             return ERROR
 
         if process_sr == "True":
             cmdstr = "%slndsr lndsr.%s.txt" % (bin_dir, xml)
-#            print 'DEBUG: lndsr command: %s' % cmdstr
+            logger.debug('DEBUG: lndsr command: {0}'.format(cmdstr))
             (status, output) = commands.getstatusoutput(cmdstr)
-            logIt(output, log_handler)
+            logger.info(output)
             exit_code = status >> 8
             if exit_code != 0:
                 msg = 'Error running lndsr.  Processing will terminate.'
@@ -320,9 +313,9 @@ class Ledaps():
                 return ERROR
 
             cmdstr = "%slndsrbm.ksh lndsr.%s.txt" % (bin_dir, xml)
-#            print 'DEBUG: lndsrbm command: %s' % cmdstr
+            logger.debug('DEBUG: lndsrbm command: {0}'.format(cmdstr))
             (status, output) = commands.getstatusoutput(cmdstr)
-            logIt(output, log_handler)
+            logger.info(output)
             exit_code = status >> 8
             if exit_code != 0:
                 msg = 'Error running lndsrbm.  Processing will terminate.'
@@ -332,8 +325,7 @@ class Ledaps():
 
         # successful completion.  return to the original directory.
         os.chdir(mydir)
-        msg = 'Completion of LEDAPS.'
-        logIt(msg, log_handler)
+        logger.info('Completion of LEDAPS.')
         if logfile is not None:
             log_handler.close()
         return SUCCESS
