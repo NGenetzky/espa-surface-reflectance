@@ -84,7 +84,8 @@ class DatasourceResolver:
                 ds = Datasource('NIMBUS', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # use METEOR3 data for 1991-1993, with NIMBUS as the backup
@@ -94,7 +95,8 @@ class DatasourceResolver:
                 ds = Datasource('METEOR3', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
             url2 = self.buildURL('NIMBUS', self.SERVER_URL, self.NIMBUS, year)
@@ -102,7 +104,8 @@ class DatasourceResolver:
                 ds2 = Datasource('NIMBUS', url2)
                 dsList.append(ds2)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # use METEOR3 data for 1994
@@ -112,7 +115,8 @@ class DatasourceResolver:
                 ds = Datasource('METEOR3', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # use EARTHPROBE data for 1996-2003
@@ -123,7 +127,8 @@ class DatasourceResolver:
                 ds = Datasource('EARTHPROBE', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # use OMI data for 2004-2005, with EARTHPROBE as the backup
@@ -133,7 +138,8 @@ class DatasourceResolver:
                 ds = Datasource('OMI', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
             url2 = self.buildURL('EARTHPROBE', self.SERVER_URL,
@@ -142,7 +148,8 @@ class DatasourceResolver:
                 ds2 = Datasource('EARTHPROBE', url2)
                 dsList.append(ds2)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # use OMI for any years beyond 2006
@@ -152,12 +159,14 @@ class DatasourceResolver:
                 ds = Datasource('OMI', url)
                 dsList.append(ds)
             else:
-                print "Could not resolve a datasource for year: %d" % year
+                logger.warn('Could not resolve a datasource for year: {0}'
+                            .format(year))
                 return None
 
         # year requested does not have TOMS/EP ozone data
         else:
-            print "Could not resolve a datasource for year: %d" % year
+            logger.warn('Could not resolve a datasource for year: {0}'
+                        .format(year))
             return None
 
         return dsList
@@ -193,7 +202,8 @@ class DatasourceResolver:
         elif type == 'OMI':
             name = '*_omi_%d*.txt' % year
         else:
-            print "Could not categorize datasource for: %s" % type
+            logger.warn('Could not categorize datasource for: {0}'
+                        .format(type))
             return None
 
         # build the URL with the information provided
@@ -245,7 +255,7 @@ def isLeapYear (year):
 ############################################################################
 def cleanTomsTargetDir (ancdir, year):
     mydir = "%s/EP_TOMS/ozone_%d" % (ancdir, year)
-    print "Cleaning EP/TOMS target directory: %s" % mydir
+    logger.info('Cleaning EP/TOMS target directory: {0}'.format(mydir))
     regex = re.compile('TOMS_' + str(year) + '\d*.hdf')
     if os.path.exists(mydir):
         # look at each file in the specified directory
@@ -256,9 +266,9 @@ def cleanTomsTargetDir (ancdir, year):
                 name = os.path.join(mydir, myfile)
                 try:
                     os.remove(name)
-                    # print "Removed %s" % name
+                    # logger.info('Removed {0}'.format(name))
                 except:
-                    print "Could not remove %s" % name
+                    logger.error('Could not remove {0}'.format(name))
 
 
 ############################################################################
@@ -291,8 +301,8 @@ def getOzoneSource (filename):
     elif inst == "omi":
         ozoneSource = 'OMI'
     else:
-        print ("Error classifying the downloaded data for: %s ... unknown "
-            "source type (%s)" % (filename, inst))
+        logger.warn('Error classifying the downloaded data for: {0} ...'
+                    'unknown source type ({1})'.format(filename, inst))
         return None
 
     # successful processing
@@ -365,12 +375,12 @@ def downloadToms (year, destination):
     # make sure the download directory exists (and is cleaned up) or create
     # it recursively
     if not os.path.exists(destination):
-        print "%s does not exist... creating" % destination
+        logger.info('{0} does not exist... creating'.format(destination))
         os.makedirs(destination, 0777)
     else:
         # directory already exists and possibly has files in it.  any old
         # files need to be cleaned up
-        print "Cleaning download directory: %s" % destination
+        logger.info('Cleaning download directory: {0}'.format(destination))
         for myfile in os.listdir(destination):
             name = os.path.join(destination, myfile)
             if not os.path.isdir(name):
@@ -379,17 +389,18 @@ def downloadToms (year, destination):
     # obtain the list of URL(s) for our particular date
     dsList = DatasourceResolver().resolve(year)
     if dsList == None:
-        print ("WARNING: EP/TOMS URL could not be resolved for year %d.  "
-            "Processing will continue ..." % year)
+        logger.warn('WARNING: EP/TOMS URL could not be resolved for year {0}.'
+                    '  Processing will continue ...'.format(year)))
         return ERROR
 
     # download the data for the current year from the list of URLs.
     # if there is a problem with the connection, then retry up to 5 times.
     # Note: if you don't like the wget output, --quiet can be used to minimize
     # the output info.  wget will return a nonzero value if there was a problem.
-    print "Downloading data for year %d to: %s" % (year, destination)
+    logger.info('Downloading data for year {0} to: {1}'
+                .format(year, destination))
     for ds in dsList:
-        print "Retrieving %s to %s" % (ds.url, destination)
+        logger.info('Retrieving {0} to {1}'.format(ds.url, destination))
         cmd = 'wget --tries=5 %s' % ds.url
         retval = subprocess.call(cmd, shell=True, cwd=destination)
 
@@ -399,12 +410,14 @@ def downloadToms (year, destination):
             retry_count = 1
             while ((retry_count <= 5) and (retval)):
                 time.sleep(60)
-                print "Retry %d of wget for %s" % (retry_count, ds.url)
+                logger.info('Retry {0} of wget for {1}'
+                            .format((retry_count, ds.url))
                 retval = subprocess.call(cmd, shell=True, cwd=destination)
                 retry_count += 1
     
             if retval:
-                print "unsuccessful download of %s (retried 5 times)" % ds.url
+                logger.info('unsuccessful download of {0} (retried 5 times)'
+                            .format(ds.url)
 
     return SUCCESS
 
@@ -448,7 +461,7 @@ def getTomsData (ancdir, year):
     # processed.  create the directory if it doesn't exist.
     outputDir = "%s/EP_TOMS/ozone_%d" % (ancdir, year)
     if not os.path.exists(outputDir):
-        print "%s does not exist... creating" % outputDir
+        logger.info('{0} does not exist... creating'.format(outputDir))
         os.makedirs(outputDir, 0777)
 
     # loop through each day in the year and process the EP/TOMS data
@@ -466,8 +479,9 @@ def getTomsData (ancdir, year):
         # make sure files were found or print a warning
         nfiles = len(fileList)
         if nfiles == 0:
-            print ("WARNING: no EP/TOMS data available for doy %d year %d "
-                "(%s). processing will continue ..." % (doy, year, datestr))
+            logger.warn('WARNING: no EP/TOMS data available for doy {0} year'
+                        '{1} ({2}). processing will continue ...'
+                        .format(doy, year, datestr))
             continue
         else:
             # if only one file was found which matched our date, then that's
@@ -478,15 +492,16 @@ def getTomsData (ancdir, year):
             else:
                 tomsfile = resolveFile (fileList)
                 if tomsfile == None:
-                    print ("WARNING: error resolving the list of EP/TOMS files "
-                        "to process. processing will continue ...")
+                    logger.warn('WARNING: error resolving the list of EP/TOMS'
+                    ' files to process. processing will continue ...')
                     continue
 
             # get the ozone source
             ozoneSource = getOzoneSource (tomsfile)
             if ozoneSource == None:
-                print ("WARNING: error determining the ozone source for %s. "
-                    "Processing will continue ..." % tomsfile)
+                logger.warn('WARNING: error determining the ozone source for'
+                            ' {0}. Processing will continue ...'
+                            .format(tomsfile))
                 continue
 
             # generate the full path for the input and output file to be
@@ -497,17 +512,17 @@ def getTomsData (ancdir, year):
                 os.remove(fullOutputPath)
             cmdstr = 'convert_ozone %s %s %s' % (fullInputPath, fullOutputPath,
                 ozoneSource)
-            print "Executing %s\n" % cmdstr
+            logger.info('Executing {0}\n'.format(cmdstr))
             (status, output) = commands.getstatusoutput (cmdstr)
-            print output
+            print(output)
             exit_code = status >> 8
             if exit_code != 0:
-                print ("WARNING: error running convert_ozone for year %d, "
-                    "DOY %d.  processing will continue ..." % (year, doy))
+                logger.warn('WARNING: error running convert_ozone for year {0}, '
+                            'DOY {1}.  processing will continue ...'.format(year, doy))
     # end for doy
 
     # remove the files downloaded to the temporary directory
-    print "Removing downloaded files"
+    logger.info('Removing downloaded files')
     for myfile in os.listdir(dloaddir):
         name = os.path.join(dloaddir, myfile)
         os.remove(name)
@@ -564,21 +579,21 @@ def main ():
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
-        print ("Invalid command line argument combination.  Type --help "
-            "for more information")
+        logger.error(('Invalid command line argument combination.  Type --help '
+                      'for more information'))
         return ERROR
 
     # determine the ancillary directory to store the data
     ancdir = os.environ.get('LEDAPS_AUX_DIR')
     if ancdir == None:
-        print "LEDAPS_AUX_DIR environment variable not set... exiting"
+        logger.error('LEDAPS_AUX_DIR environment variable not set... exiting')
         return ERROR
 
     # if processing today then process the current year.  if the current
     # DOY is within the first month, then process the previous year as well
     # to make sure we have all the recently available data processed.
     if today:
-        print "Processing EP/TOMS data for the most recent year"
+        logger.info('Processing EP/TOMS data for the most recent year')
         now = datetime.datetime.now()
         day_of_year = now.timetuple().tm_yday
         eyear = now.year
@@ -588,22 +603,22 @@ def main ():
             syear = now.year
 
     elif quarterly:
-        print "Processing EP/TOMS data back to %d" % START_YEAR
+        logger.info('Processing EP/TOMS data back to {0}'.format(START_YEAR))
         now = datetime.datetime.now()
         day_of_year = now.timetuple().tm_yday
         eyear = now.year
         syear = START_YEAR
 
-    print 'Processing EP/TOMS data for %d - %d' % (syear, eyear)
+    logger.info('Processing EP/TOMS data for {0} - {1}'.format((syear, eyear))
     for yr in range(syear, eyear+1):
-        print 'Processing year: %d' % yr
+        logger.info("Processing year: {0}".format(yr))
         status = getTomsData(ancdir, yr)
         if status == ERROR:
-            print ("WARNING: Problems occurred while processing EP/TOMS data "
-                "for year %d.  Processing will continue." % yr)
+            logger.warn(('WARNING: Problems occurred while processing EP/TOMS data '
+                'for year {0}.  Processing will continue.'.format(yr))
 
-    print 'EP/TOMS processing complete.'
+    logger.info('EP/TOMS processing complete.')
     return SUCCESS
 
 if __name__ == "__main__":
-    sys.exit (main())
+    sys.exit (main()
