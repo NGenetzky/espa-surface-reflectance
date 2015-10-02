@@ -95,13 +95,13 @@ def getNcepData (ancdir, year):
     status = downloadNcep(pressureFile, '/tmp/ncep')
     if status == ERROR:
         logger.error('could not download pressureFile data: {0}'
-                    .format(pressureFile))
+                     .format(pressureFile))
         return ERROR
         
     status = downloadNcep(waterFile, '/tmp/ncep')
     if status == ERROR:
         logger.error('could not download waterFile data: {0}'
-                    .format(waterFile))
+                     .format(waterFile))
         return ERROR
 
     status = downloadNcep(airFile, '/tmp/ncep')
@@ -115,13 +115,13 @@ def getNcepData (ancdir, year):
     status = executeNcep(pressureFileSource, outputDest, year, True)
     if status == ERROR:
         logger.error('could not process pressureFile: {0}'
-                    .format(pressureFileSource))
+                     .format(pressureFileSource))
         return ERROR
 
     status = executeNcep(waterFileSource, outputDest, year, False)
     if status == ERROR:
         logger.error('could not process waterFile: {0}'
-                    .format(waterFileSource))
+                     .format(waterFileSource))
         return ERROR
 
     status = executeNcep(airFileSource, outputDest, year, False)
@@ -198,13 +198,14 @@ def executeNcep (fullinputpath, outputdir, year, clean):
         print(output)  # TODO:Should this be info message or output?
         exit_code = status >> 8
         if exit_code == 157:  # return value of -99 (2s complement of 157)
-            logger.error(('ERROR: Input file for year {0}, DOY {1} is not readable.  '
-                'Stop processing since this same file is used for all days in '
-                'the current year.'.format(year, doy))
+            logger.error('ERROR: Input file for year {0}, DOY {1} is not'
+                         ' readable.  Stop processing since this same file is'
+                         ' used for all days in the current year.'
+                         .format(year, doy))
             return ERROR
         elif exit_code != 0:
             logger.warn('WARNING: error running ncep for year {0}, DOY {1}.  '
-                'Processing will continue ...'.format(year, doy))
+                        'Processing will continue ...'.format(year, doy))
             if os.path.isfile(fulloutputpath):
                 os.remove(fulloutputpath)
 
@@ -264,7 +265,7 @@ def cleanNcepTargetDir (ancdir, year):
 #   function is pretty short and sweet, so we'll stick with wget.
 ############################################################################
 def downloadNcep (sourcefilename, destination):
-    logger.info('Retrieving {0} to {1}'.format(sourcefilename, destination)
+    logger.info('Retrieving {0} to {1}'.format(sourcefilename, destination))
     url = 'ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis/surface/%s' %  \
         sourcefilename
 
@@ -297,7 +298,8 @@ def downloadNcep (sourcefilename, destination):
             retry_count += 1
 
         if retval:
-            logger.info('unsuccessful download of {0} (retried 5 times)'.format(url))
+            logger.info('unsuccessful download of {0} (retried 5 times)'
+                        .format(url))
 
     logger.info('successful download of {0} to {1}'.format(url, destination))
     return SUCCESS
@@ -349,8 +351,8 @@ def main ():
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
-        logger.error('Invalid command line argument combination.  Type --help  '
-            'for more information')
+        logger.error('Invalid command line argument combination.  Type --help'
+                     ' for more information')
         return ERROR
 
     # determine the ancillary directory to store the data
@@ -384,8 +386,9 @@ def main ():
         logger.info('Processing year: {0}'.format(yr))
         status = getNcepData(ancdir, yr)
         if status == ERROR:
-            logger.warn('WARNING: Problems occurred while processing NCEP data for '
-                        'year {0}.  Processing will continue.'.format(yr))
+            logger.warn('WARNING: Problems occurred while processing NCEP'
+                        ' data for year {0}.  Processing will continue.'
+                        .format(yr))
 
     logger.info('NCEP processing complete.')
     return SUCCESS
