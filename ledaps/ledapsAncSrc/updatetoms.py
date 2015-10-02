@@ -390,7 +390,7 @@ def downloadToms (year, destination):
     dsList = DatasourceResolver().resolve(year)
     if dsList == None:
         logger.warn('WARNING: EP/TOMS URL could not be resolved for year {0}.'
-                    '  Processing will continue ...'.format(year)))
+                    '  Processing will continue ...'.format(year))
         return ERROR
 
     # download the data for the current year from the list of URLs.
@@ -411,13 +411,13 @@ def downloadToms (year, destination):
             while ((retry_count <= 5) and (retval)):
                 time.sleep(60)
                 logger.info('Retry {0} of wget for {1}'
-                            .format((retry_count, ds.url))
+                            .format(retry_count, ds.url))
                 retval = subprocess.call(cmd, shell=True, cwd=destination)
                 retry_count += 1
     
             if retval:
                 logger.info('unsuccessful download of {0} (retried 5 times)'
-                            .format(ds.url)
+                            .format(ds.url))
 
     return SUCCESS
 
@@ -480,7 +480,7 @@ def getTomsData (ancdir, year):
         nfiles = len(fileList)
         if nfiles == 0:
             logger.warn('WARNING: no EP/TOMS data available for doy {0} year'
-                        '{1} ({2}). processing will continue ...'
+                        ' {1} ({2}). processing will continue ...'
                         .format(doy, year, datestr))
             continue
         else:
@@ -493,7 +493,7 @@ def getTomsData (ancdir, year):
                 tomsfile = resolveFile (fileList)
                 if tomsfile == None:
                     logger.warn('WARNING: error resolving the list of EP/TOMS'
-                    ' files to process. processing will continue ...')
+                                ' files to process. processing will continue ...')
                     continue
 
             # get the ozone source
@@ -517,8 +517,9 @@ def getTomsData (ancdir, year):
             print(output)
             exit_code = status >> 8
             if exit_code != 0:
-                logger.warn('WARNING: error running convert_ozone for year {0}, '
-                            'DOY {1}.  processing will continue ...'.format(year, doy))
+                logger.warn('WARNING: error running convert_ozone for year'
+                            ' {0}, DOY {1}.  processing will continue ...'
+                            .format(year, doy))
     # end for doy
 
     # remove the files downloaded to the temporary directory
@@ -579,8 +580,8 @@ def main ():
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
-        logger.error(('Invalid command line argument combination.  Type --help '
-                      'for more information'))
+        logger.error('Invalid command line argument combination.  Type --help'
+                     ' for more information')
         return ERROR
 
     # determine the ancillary directory to store the data
@@ -609,13 +610,14 @@ def main ():
         eyear = now.year
         syear = START_YEAR
 
-    logger.info('Processing EP/TOMS data for {0} - {1}'.format((syear, eyear))
+    logger.info('Processing EP/TOMS data for {0} - {1}'.format(syear, eyear))
     for yr in range(syear, eyear+1):
-        logger.info("Processing year: {0}".format(yr))
+        logger.info('Processing year: {0}'.format(yr))
         status = getTomsData(ancdir, yr)
         if status == ERROR:
-            logger.warn(('WARNING: Problems occurred while processing EP/TOMS data '
-                'for year {0}.  Processing will continue.'.format(yr))
+            logger.warn('WARNING: Problems occurred while processing EP/TOMS'
+                        'data for year {0}.  Processing will continue.'
+                        .format(yr))
 
     logger.info('EP/TOMS processing complete.')
     return SUCCESS
