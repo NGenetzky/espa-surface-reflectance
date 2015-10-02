@@ -216,7 +216,8 @@ def downloadLads (year, doy, destination):
             retry_count = 1
             while ((retry_count <= 5) and (retval)):
                 time.sleep(60)
-                logger.info('Retry {0} of wget for {1}'.format(retry_count, url)
+                logger.info('Retry {0} of wget for {1}'
+                            .format(retry_count, url))
                 retval = subprocess.call(cmd, shell=True, cwd=destination)
                 retry_count += 1
 
