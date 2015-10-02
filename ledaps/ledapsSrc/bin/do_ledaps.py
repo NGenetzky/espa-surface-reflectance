@@ -4,6 +4,7 @@ import os
 import re
 import commands
 import datetime
+import logging
 from optparse import OptionParser
 
 ERROR = 1
@@ -234,6 +235,9 @@ class Ledaps():
         log_handler = None
         if logfile is not None:
             log_handler = open(logfile, 'w', buffering=1)
+
+        # Obtain logger from logging using the module's name
+        logger = logging.getLogger(__name__)
         logger.info('LEDAPS processing of Landsat XML file: {0}'
                     .format(xmlfile))
 
@@ -243,7 +247,7 @@ class Ledaps():
             # get the BIN dir environment variable
             bin_dir = os.environ.get('BIN')
             bin_dir = bin_dir + '/'
-            logger.info('BIN environment variable: {0}'.format(bin_dir)
+            logger.info('BIN environment variable: {0}'.format(bin_dir))
         else:
             # don't use a path to the lnd* applications
             bin_dir = ""
