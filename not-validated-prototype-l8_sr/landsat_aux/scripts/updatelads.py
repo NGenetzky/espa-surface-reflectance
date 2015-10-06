@@ -457,8 +457,7 @@ def getLadsData (auxdir, year, today):
 #    date.
 ############################################################################
 def main ():
-    # get the logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # Get logger for the module.
 
     # get the command line arguments
     parser = OptionParser()
