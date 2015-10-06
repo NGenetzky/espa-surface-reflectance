@@ -195,7 +195,7 @@ def executeNcep (fullinputpath, outputdir, year, clean):
         cmdstr = 'ncep_repackage %s %s %s' % (fullinputpath,fulloutputpath,doy)
         logger.info('\nExecuting {0}'.format(cmdstr))
         (status, output) = commands.getstatusoutput (cmdstr)
-        print(output)  # TODO:Should this be info message or output?
+        print(output)  # TODO:Should this be info message or print()?
         exit_code = status >> 8
         if exit_code == 157:  # return value of -99 (2s complement of 157)
             logger.error('ERROR: Input file for year {0}, DOY {1} is not'
@@ -265,6 +265,7 @@ def cleanNcepTargetDir (ancdir, year):
 #   function is pretty short and sweet, so we'll stick with wget.
 ############################################################################
 def downloadNcep (sourcefilename, destination):
+    logger = logging.getLogger(__name__)  # Get logger for the module.
     logger.info('Retrieving {0} to {1}'.format(sourcefilename, destination))
     url = 'ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis/surface/%s' %  \
         sourcefilename
@@ -348,6 +349,7 @@ def main ():
     today = options.today           # process most recent year of data
     quarterly = options.quarterly   # process today back to START_YEAR
 
+    logger = logging.getLogger(__name__)  # Get the logger for this module.
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
@@ -394,4 +396,11 @@ def main ():
     return SUCCESS
 
 if __name__ == "__main__":
+    # setup the default logger format and level. log to STDOUT.
+    logging.basicConfig(format=('%(asctime)s.%(msecs)03d %(process)d'
+                                ' %(levelname)-8s'
+                                ' %(filename)s:%(lineno)d:'
+                                '%(funcName)s -- %(message)s'),
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.INFO)
     sys.exit (main())

@@ -19,6 +19,7 @@ import commands
 import re
 import time
 import subprocess
+import logging
 from optparse import OptionParser
 
 # Global static variables
@@ -77,6 +78,7 @@ class DatasourceResolver:
     def resolve(self, year):
         dsList = []     # create empty data source list
 
+        logger = logging.getLogger(__name__)  # Get logger for the module.
         # use NIMBUS data for 1978-1990
         if year in range(1978, 1991):
             url = self.buildURL('NIMBUS', self.SERVER_URL, self.NIMBUS, year)
@@ -372,6 +374,7 @@ def resolveFile (fileList):
 #   function is pretty short and sweet, so we'll stick with wget.
 ############################################################################
 def downloadToms (year, destination):
+    logger = logging.getLogger(__name__)  # Get logger for the module.
     # make sure the download directory exists (and is cleaned up) or create
     # it recursively
     if not os.path.exists(destination):
@@ -577,6 +580,8 @@ def main ():
     today = options.today           # process most recent year of data
     quarterly = options.quarterly   # process today back to START_YEAR
 
+    logger = logging.getLogger(__name__)  # Get logger for the module.
+
     # check the arguments
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
@@ -623,4 +628,11 @@ def main ():
     return SUCCESS
 
 if __name__ == "__main__":
-    sys.exit (main()
+    # setup the default logger format and level. log to STDOUT.
+    logging.basicConfig(format=('%(asctime)s.%(msecs)03d %(process)d'
+                                ' %(levelname)-8s'
+                                ' %(filename)s:%(lineno)d:'
+                                '%(funcName)s -- %(message)s'),
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.INFO)
+    sys.exit (main())
