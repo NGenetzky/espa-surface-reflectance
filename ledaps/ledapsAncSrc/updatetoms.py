@@ -304,7 +304,7 @@ def getOzoneSource (filename):
         ozoneSource = 'OMI'
     else:
         logger.warn('Error classifying the downloaded data for: {0} ...'
-                    'unknown source type ({1})'.format(filename, inst))
+                    ' unknown source type ({1})'.format(filename, inst))
         return None
 
     # successful processing
@@ -517,7 +517,7 @@ def getTomsData (ancdir, year):
                 ozoneSource)
             logger.info('Executing {0}\n'.format(cmdstr))
             (status, output) = commands.getstatusoutput (cmdstr)
-            print(output)
+            logger.info(output)
             exit_code = status >> 8
             if exit_code != 0:
                 logger.warn('WARNING: error running convert_ozone for year'
@@ -621,7 +621,7 @@ def main ():
         status = getTomsData(ancdir, yr)
         if status == ERROR:
             logger.warn('WARNING: Problems occurred while processing EP/TOMS'
-                        'data for year {0}.  Processing will continue.'
+                        ' data for year {0}.  Processing will continue.'
                         .format(yr))
 
     logger.info('EP/TOMS processing complete.')

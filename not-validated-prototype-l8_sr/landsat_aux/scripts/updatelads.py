@@ -59,8 +59,8 @@ class DatasourceResolver:
                 "%s" % e
             logger.error(msg)
             return None
-        logger.info('LADSFTP username: {0}\nLADSFTP password: {1}'
-                    .format(self.user, self.password))
+        logger.info('LADSFTP username: {0}'.format(self.user)
+        logger.info('LADSFTP password: {1}'.format(self.password)
 
         # verify that the XMLRPC service returned valid information and
         # the username and password were set in the configuration
@@ -458,6 +458,13 @@ def getLadsData (auxdir, year, today):
 ############################################################################
 def main ():
     logger = logging.getLogger(__name__)  # Get logger for the module.
+    # setup the default logger format and level. log to STDOUT.
+    logging.basicConfig(format=('%(asctime)s.%(msecs)03d %(process)d'
+                                ' %(levelname)-8s'
+                                ' %(filename)s:%(lineno)d:'
+                                '%(funcName)s -- %(message)s'),
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.INFO)
 
     # get the command line arguments
     parser = OptionParser()

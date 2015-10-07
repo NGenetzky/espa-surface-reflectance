@@ -354,7 +354,7 @@ def main ():
     if (today == False) and (quarterly == False) and \
        (syear == 0 or eyear == 0):
         logger.error('Invalid command line argument combination.  Type --help'
-                     ' for more information')
+                     ' \ for more information')
         return ERROR
 
     # determine the ancillary directory to store the data
